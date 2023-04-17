@@ -12,7 +12,7 @@ const uint32_t HEIGHT = 600;
 
 const std::vector<const char*> validationLayers =
 {
-	"VK_LAYER_KHRONOS_validation"
+	"VK_LAYER_KHRONOS_validation"//Vulkan 标准扩展
 };
 
 #ifdef NDEBUG 
@@ -23,15 +23,15 @@ const bool enableValidationLayer = true;
 
 class HelloTriangleApplication
 {
-	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback
+	static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback//静态成员回调函数，vk驱动调这个，我们处理实现。
 	(
-		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,
-		VkDebugUtilsMessageTypeFlagsEXT messageType,
-		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,
-		void* pUserData
+		VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity,//Vulkan 驱动告诉我们这条消息的级别
+		VkDebugUtilsMessageTypeFlagsEXT messageType,//Vulkan 驱动告诉我们这条消息的分组目录类型
+		const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData,//Vulkan 驱动通过这个结构体告诉我们他的消息的具体内容
+		void* pUserData//暂时没用，可以告诉我们一些自定义的数据信息
 	)
 	{
-		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)
+		if (messageSeverity >= VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT)//如果大于Warning级别就打印
 		{
 			std::cerr << "validation layer: " << pCallbackData->pMessage << std::endl;
 			return VK_FALSE;
@@ -58,7 +58,7 @@ private:
 	void initVulkan()
 	{
 		createInstance();
-		setupDebugMessenger();
+		setupDebugMessenger();//Validation Layer 启用后需要初始化，否则就只是单纯启动了一个Layer，没有实际功能的使用
 	}
 
 	void setupDebugMessenger()
@@ -66,18 +66,18 @@ private:
 		if (!enableValidationLayer)
 			return;
 
-		VkDebugUtilsMessengerCreateInfoEXT createInfo{};
+		VkDebugUtilsMessengerCreateInfoEXT createInfo{};//需要先创建一个Messenger，用来让VK驱动给我们发消息
 		createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
-		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+		createInfo.messageSeverity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |//类似Warning，Log，Error，Verbose
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT |
 			VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT;
-		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |
+		createInfo.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT |//类似PxrUnreal，LogTemp，LogHMD
 			VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT |
 			VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT;
-		createInfo.pfnUserCallback = debugCallback;
-		createInfo.pUserData = nullptr;
+		createInfo.pfnUserCallback = debugCallback;//需要指定一个回调函数，消息会通过这个回调函数返回给我们开发者
+		createInfo.pUserData = nullptr;//我们开发者传入的信息，暂时无用
 
-		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)
+		if (CreateDebugUtilsMessengerEXT(instance, &createInfo, nullptr, &debugMessenger) != VK_SUCCESS)//创建Messenger
 		{
 			throw std::runtime_error("failed to set up debug messenger!");
 		}
@@ -89,7 +89,7 @@ private:
 		, const VkAllocationCallbacks* pAllocator
 		, VkDebugUtilsMessengerEXT* pDebugMessenger)
 	{
-		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");
+		auto func = (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkCreateDebugUtilsMessengerEXT");//获取该扩展的新增接口并且调用
 		if (func != nullptr)
 		{
 			return func(instance, pCreateInfo, pAllocator, pDebugMessenger);
@@ -104,7 +104,7 @@ private:
 		, VkDebugUtilsMessengerEXT debugMessenger
 		, const VkAllocationCallbacks* pAllocator)
 	{
-		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");
+		auto func = (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(instance, "vkDestroyDebugUtilsMessengerEXT");//销毁Messenger
 		if (func != nullptr)
 		{
 			func(instance, debugMessenger, pAllocator);
@@ -116,7 +116,7 @@ private:
 		uint32_t layerCount;
 		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
 		std::vector<VkLayerProperties> availableLayers(layerCount);
-		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());
+		vkEnumerateInstanceLayerProperties(&layerCount, availableLayers.data());//通过Instance查询当前硬件的Vulkan驱动支持的API Layer
 
 		std::cout << "available layers" << std::endl;
 		for (const auto& layerProperties : availableLayers)
@@ -129,7 +129,7 @@ private:
 		{
 			for (const auto& layerProperties : availableLayers)
 			{
-				if (strcmp(layerName, layerProperties.layerName) == 0)
+				if (strcmp(layerName, layerProperties.layerName) == 0)//检查 Validation Layer 是否支持，如果支持的话就返回true
 				{
 					std::cout << "validation layer available!" << std::endl;
 					return true;
@@ -211,12 +211,12 @@ private:
 		createInfo.enabledExtensionCount = (uint32_t)enabledExtensions.size();//最终确定创建instance启用扩展的数量
 		createInfo.ppEnabledExtensionNames = enabledExtensions.data();//启用的扩展
 
-		if (enableValidationLayer)
+		if (enableValidationLayer)//Debug 模式下开启Validation Layer
 		{
-			if (checkValidationLayerSupport())
+			if (checkValidationLayerSupport())//检查是否支持Validation Layer
 			{
-				createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
-				createInfo.ppEnabledLayerNames = validationLayers.data();
+				createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());//将弃用的Layer 传入数量和名称
+				createInfo.ppEnabledLayerNames = validationLayers.data();//创建实例的时候将启动该Layer
 			}
 			else
 			{
@@ -250,7 +250,7 @@ private:
 	{
 		if (enableValidationLayer)
 		{
-			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);
+			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);//如果我们注释掉这行逻辑，会受到Validation Layer 的报错信息，在退出应用的时候
 		}
 		vkDestroyInstance(instance, nullptr);//退出的时候要销毁instance，不过之前得销毁我们所创建的所有vk资源
 		glfwDestroyWindow(window);
