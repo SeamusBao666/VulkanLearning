@@ -63,6 +63,7 @@ private:
 		createInstance();
 		setupDebugMessenger();//Validation Layer 启用后需要初始化，否则就只是单纯启动了一个Layer，没有实际功能的使用
 		pickPhysicalDevice();
+		createLogicalDevice();
 	}
 
 	void setupDebugMessenger()
@@ -245,6 +246,50 @@ private:
 		return indices;
 	}
 
+	void createLogicalDevice()
+	{
+		QueueFamilyIndices indices = findQueueFamilies(physicalDevice);
+		VkDeviceQueueCreateInfo queueCreateInfo{};
+		queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		queueCreateInfo.queueFamilyIndex = indices.graphicsFamily.value();
+		queueCreateInfo.queueCount = 1;
+		float queuePriority = 1.0f;
+		queueCreateInfo.pQueuePriorities = &queuePriority;
+
+		VkPhysicalDeviceFeatures deviceFeatures{};
+
+		VkDeviceCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		createInfo.pQueueCreateInfos = &queueCreateInfo;
+		createInfo.queueCreateInfoCount = 1;
+
+		createInfo.pEnabledFeatures = &deviceFeatures;
+
+		createInfo.enabledExtensionCount = 0;
+
+		if (enableValidationLayer)
+		{
+			createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+			createInfo.ppEnabledLayerNames = validationLayers.data();
+		}
+		else
+		{
+			createInfo.enabledLayerCount = 0;
+		}
+
+		if (vkCreateDevice(physicalDevice,&createInfo,nullptr,&device)==VK_SUCCESS)
+		{
+			std::cout << "succeed to create logical device!" << std::endl;
+		}
+		else
+		{
+			throw std::runtime_error("failed to create logical device!");
+		}
+
+		vkGetDeviceQueue(device, indices.graphicsFamily.value(), 0, &graphicsQueue);
+	}
+
+
 	std::vector<const char*> getRequiredExtension()
 	{
 		uint32_t glfwExtensionCount = 0;
@@ -353,6 +398,7 @@ private:
 
 	void cleanup()
 	{
+		vkDestroyDevice(device, nullptr);
 		if (enableValidationLayer)
 		{
 			DestroyDebugUtilsMessengerEXT(instance, debugMessenger, nullptr);//如果我们注释掉这行逻辑，会受到Validation Layer 的报错信息，在退出应用的时候
@@ -366,6 +412,8 @@ private:
 	VkInstance instance;
 	VkDebugUtilsMessengerEXT debugMessenger;
 	VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
+	VkDevice device;
+	VkQueue graphicsQueue;
 };
 
 int main()
