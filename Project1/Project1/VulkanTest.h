@@ -24,6 +24,11 @@ const std::vector<const char*> validationLayers =
 	"VK_LAYER_KHRONOS_validation"//Vulkan ±ê×¼À©Õ¹
 };
 
+const std::vector<const char*> deviceExtensions =
+{
+	VK_KHR_SWAPCHAIN_EXTENSION_NAME
+};
+
 #ifdef NDEBUG 
 const bool enableValidationLayer = false;
 #else
@@ -54,6 +59,13 @@ private:
 		}
 	};
 
+	struct SwapChainSupportDetails
+	{
+		VkSurfaceCapabilitiesKHR capabilities;
+		std::vector<VkSurfaceFormatKHR> formats;
+		std::vector<VkPresentModeKHR> presentModes;
+	};
+
 private:
 	void initWindow();
 
@@ -76,7 +88,10 @@ private:
 	void pickPhysicalDevice();
 	int rateDeviceSuitability(VkPhysicalDevice device);
 	bool isDeviceSuitable(VkPhysicalDevice device);
+	bool checkDeviceExtensionSupport(VkPhysicalDevice device);
 	QueueFamilyIndices findQueueFamilies(VkPhysicalDevice device);
+	SwapChainSupportDetails querySwapChainSupport(VkPhysicalDevice device);
+	VkSurfaceFormatKHR chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR>& availableFormats);
 
 	void createLogicalDevice();
 
